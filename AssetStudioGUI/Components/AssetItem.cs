@@ -15,7 +15,7 @@ namespace AssetStudioGUI
         public string InfoText;
         public string UniqueID;
         public GameObjectTreeNode TreeNode;
-
+        public System.Collections.Generic.List<AssetItem> SelectedAnimationList = null;
         public AssetItem(Object asset)
         {
             Asset = asset;

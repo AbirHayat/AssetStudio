@@ -2070,14 +2070,31 @@ namespace AssetStudioGUI
                     switch (type)
                     {
                         case ExportFilter.All:
-                            toExportAssets = exportableAssets;
+                            toExportAssets = new List<AssetItem>(exportableAssets);
                             break;
                         case ExportFilter.Selected:
                             toExportAssets = GetSelectedAssets();
                             break;
                         case ExportFilter.Filtered:
-                            toExportAssets = visibleAssets;
+                            toExportAssets = new List<AssetItem>(visibleAssets);
                             break;
+                    }
+
+                    if (exportType == ExportType.Convert && toExportAssets != null)
+                    {
+                        var animators = toExportAssets.Where(x => x.Type == ClassIDType.Animator).ToList();
+                        foreach (var animator in animators)
+                        {
+                            var dialog = new ExportAnimatorClipsForm(animator, exportableAssets);
+                            if (dialog.ShowDialog(this) == DialogResult.OK)
+                            {
+                                animator.SelectedAnimationList = dialog.SelectedClips;
+                            }
+                            else
+                            {
+                                toExportAssets.Remove(animator);
+                            }
+                        }
                     }
 
                     if (toExportAssets != null && filterTypeToolStripMenuItem.DropDownItems.ContainsKey("Texture2DArray"))

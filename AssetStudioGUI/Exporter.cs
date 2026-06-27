@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -232,18 +232,41 @@ namespace AssetStudioGUI
 
         public static bool ExportAnimator(AssetItem item, string exportPath, List<AssetItem> animationList = null)
         {
-            var exportFullPath = Path.Combine(exportPath, item.Text, item.Text + ".fbx");
-            if (File.Exists(exportFullPath))
-            {
-                exportFullPath = Path.Combine(exportPath, item.Text + item.UniqueID, item.Text + ".fbx");
-            }
             if (!Studio.FbxSettings.ExportAnimations)
                 animationList = new List<AssetItem>();
+            if (animationList == null && item.SelectedAnimationList != null)
+            {
+                animationList = item.SelectedAnimationList;
+            }
+
             var m_Animator = (Animator)item.Asset;
-            var convert = animationList != null
-                ? new ModelConverter(m_Animator, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToList())
-                : new ModelConverter(m_Animator, Properties.Settings.Default.convertType);
-            ExportFbx(convert, exportFullPath);
+
+
+            if (animationList != null && animationList.Count > 0)
+            {
+                foreach (var clip in animationList)
+                {
+                    var clipName = FixFileName(clip.Text);
+                    var exportFullPath = Path.Combine(exportPath, item.Text, $"{item.Text}_{clipName}.fbx");
+                    if (File.Exists(exportFullPath))
+                    {
+                        exportFullPath = Path.Combine(exportPath, item.Text + item.UniqueID, $"{item.Text}_{clipName}.fbx");
+                    }
+                    var singleClipList = new List<AnimationClip> { (AnimationClip)clip.Asset };
+                    var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType, singleClipList);
+                    ExportFbx(convert, exportFullPath);
+                }
+            }
+            else
+            {
+                var exportFullPath = Path.Combine(exportPath, item.Text, item.Text + ".fbx");
+                if (File.Exists(exportFullPath))
+                {
+                    exportFullPath = Path.Combine(exportPath, item.Text + item.UniqueID, item.Text + ".fbx");
+                }
+                var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType);
+                ExportFbx(convert, exportFullPath);
+            }
             return true;
         }
 
