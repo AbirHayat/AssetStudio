@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -11,7 +11,7 @@ namespace AssetStudioGUI
     {
         private static readonly ConcurrentDictionary<string, bool> ExportPathDict = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
-        public static bool ExportTexture2D(AssetItem item, string exportPath, out string debugLog)
+        public static bool ExportTexture2D(AssetItem item, string exportPath, out string debugLog, bool? forceNormalMap = null, bool? forceInvertY = null)
         {
             debugLog = "";
             var m_Texture2D = (Texture2D)item.Asset;
@@ -44,7 +44,10 @@ namespace AssetStudioGUI
                     debugLog += sb.ToString();
                 }
 
-                var image = m_Texture2D.ConvertToImage(flip: true);
+                var isNormal = forceNormalMap ?? (Properties.Settings.Default.convertNormalMaps && 
+                    (m_Texture2D.IsNormalMap || NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat)));
+                var invertY = forceInvertY ?? Properties.Settings.Default.normalMapInvertY;
+                var image = m_Texture2D.ConvertToImage(flip: true, unpackNormal: isNormal, invertY: invertY);
                 if (image == null)
                 {
                     Logger.Warning($"Failed to convert texture \"{m_Texture2D.m_Name}\" into image");

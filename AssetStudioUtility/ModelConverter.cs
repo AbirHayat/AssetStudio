@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -750,7 +750,8 @@ namespace AssetStudio
 
                     texture.Offset = texEnv.Value.m_Offset;
                     texture.Scale = texEnv.Value.m_Scale;
-                    ConvertTexture2D(m_Texture2D, texture.Name);
+                    var isNormal = dest == 3 || dest == 1 || m_Texture2D.IsNormalMap || NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat);
+                    ConvertTexture2D(m_Texture2D, texture.Name, isNormal);
                 }
 
                 MaterialList.Add(iMat);
@@ -762,7 +763,7 @@ namespace AssetStudio
             return iMat;
         }
 
-        private void ConvertTexture2D(Texture2D m_Texture2D, string name)
+        private void ConvertTexture2D(Texture2D m_Texture2D, string name, bool isNormalMap = false)
         {
             var iTex = ImportedHelpers.FindTexture(name, TextureList);
             if (iTex != null)
@@ -770,7 +771,7 @@ namespace AssetStudio
                 return;
             }
 
-            var stream = m_Texture2D.ConvertToStream(imageFormat, true);
+            var stream = m_Texture2D.ConvertToStream(imageFormat, true, unpackNormal: isNormalMap);
             if (stream != null)
             {
                 using (stream)

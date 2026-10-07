@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +18,8 @@ namespace AssetStudioGUI
             overwriteExistingFiles.Checked = Properties.Settings.Default.overwriteExistingFiles;
             restoreExtensionName.Checked = Properties.Settings.Default.restoreExtensionName;
             converttexture.Checked = Properties.Settings.Default.convertTexture;
+            convertNormalMapsCheckBox.Checked = Properties.Settings.Default.convertNormalMaps;
+            normalMapInvertYCheckBox.Checked = Properties.Settings.Default.normalMapInvertY;
             exportSpriteWithAlphaMask.Checked = Properties.Settings.Default.exportSpriteWithMask;
             convertAudio.Checked = Properties.Settings.Default.convertAudio;
             var defaultImageType = Properties.Settings.Default.convertType.ToString();
@@ -47,6 +49,8 @@ namespace AssetStudioGUI
             Properties.Settings.Default.overwriteExistingFiles = overwriteExistingFiles.Checked;
             Properties.Settings.Default.restoreExtensionName = restoreExtensionName.Checked;
             Properties.Settings.Default.convertTexture = converttexture.Checked;
+            Properties.Settings.Default.convertNormalMaps = convertNormalMapsCheckBox.Checked;
+            Properties.Settings.Default.normalMapInvertY = normalMapInvertYCheckBox.Checked;
             Properties.Settings.Default.exportSpriteWithMask = exportSpriteWithAlphaMask.Checked;
             Properties.Settings.Default.convertAudio = convertAudio.Checked;
             var checkedImageType = (RadioButton)panel1.Controls.Cast<Control>().First(x => ((RadioButton)x).Checked);

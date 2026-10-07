@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using AssetStudioCLI.Options;
 using CubismLive2DExtractor;
 using System;
@@ -250,6 +250,18 @@ namespace AssetStudioCLI
                                 if (m_Container.Value.TryGet(out var obj))
                                 {
                                     containers[obj] = m_Container.Key;
+                                }
+                            }
+                            break;
+                        case Material m_Material:
+                            foreach (var texEnv in m_Material.m_SavedProperties.m_TexEnvs)
+                            {
+                                if (NormalMapConverter.IsNormalMapMaterialProperty(texEnv.Key))
+                                {
+                                    if (texEnv.Value.m_Texture.TryGet(out var tex) && tex is Texture2D tex2D)
+                                    {
+                                        tex2D.IsNormalMap = true;
+                                    }
                                 }
                             }
                             break;

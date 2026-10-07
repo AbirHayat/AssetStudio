@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,6 +19,7 @@ namespace AssetStudio
         public ResourceReader image_data;
         public StreamingInfo m_StreamData;
         public StreamingInfo m_DataStreamData; //Tuanjie
+        public bool IsNormalMap { get; set; }
 
         public Texture2D() { }
 

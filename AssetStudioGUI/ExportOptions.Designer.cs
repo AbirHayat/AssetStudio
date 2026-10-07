@@ -1,4 +1,4 @@
-﻿namespace AssetStudioGUI
+namespace AssetStudioGUI
 {
     partial class ExportOptions
     {
@@ -52,6 +52,8 @@
             this.topng = new System.Windows.Forms.RadioButton();
             this.tobmp = new System.Windows.Forms.RadioButton();
             this.converttexture = new System.Windows.Forms.CheckBox();
+            this.convertNormalMapsCheckBox = new System.Windows.Forms.CheckBox();
+            this.normalMapInvertYCheckBox = new System.Windows.Forms.CheckBox();
             this.l2dGroupBox = new System.Windows.Forms.GroupBox();
             this.l2dAssetSearchByFilenameCheckBox = new System.Windows.Forms.CheckBox();
             this.l2dModelGroupComboBox = new System.Windows.Forms.ComboBox();
@@ -137,6 +139,8 @@
             this.groupBox1.Controls.Add(this.convertAudio);
             this.groupBox1.Controls.Add(this.panel1);
             this.groupBox1.Controls.Add(this.converttexture);
+            this.groupBox1.Controls.Add(this.convertNormalMapsCheckBox);
+            this.groupBox1.Controls.Add(this.normalMapInvertYCheckBox);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(316, 303);
@@ -382,6 +386,30 @@
             this.converttexture.TabIndex = 7;
             this.converttexture.Text = "Convert Texture2D";
             this.converttexture.UseVisualStyleBackColor = true;
+            // 
+            // convertNormalMapsCheckBox
+            // 
+            this.convertNormalMapsCheckBox.AutoSize = true;
+            this.convertNormalMapsCheckBox.Checked = true;
+            this.convertNormalMapsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.convertNormalMapsCheckBox.Location = new System.Drawing.Point(125, 110);
+            this.convertNormalMapsCheckBox.Name = "convertNormalMapsCheckBox";
+            this.convertNormalMapsCheckBox.Size = new System.Drawing.Size(130, 17);
+            this.convertNormalMapsCheckBox.TabIndex = 8;
+            this.convertNormalMapsCheckBox.Text = "Unpack Normal Maps";
+            this.optionTooltip.SetToolTip(this.convertNormalMapsCheckBox, "Automatically unpack DXT5nm / BC5 normal maps to standard RGB (blue) during export");
+            this.convertNormalMapsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // normalMapInvertYCheckBox
+            // 
+            this.normalMapInvertYCheckBox.AutoSize = true;
+            this.normalMapInvertYCheckBox.Location = new System.Drawing.Point(150, 219);
+            this.normalMapInvertYCheckBox.Name = "normalMapInvertYCheckBox";
+            this.normalMapInvertYCheckBox.Size = new System.Drawing.Size(125, 17);
+            this.normalMapInvertYCheckBox.TabIndex = 12;
+            this.normalMapInvertYCheckBox.Text = "Invert Normal Map Y";
+            this.optionTooltip.SetToolTip(this.normalMapInvertYCheckBox, "Invert Green channel (Y) for DirectX / Unreal Engine normal map format");
+            this.normalMapInvertYCheckBox.UseVisualStyleBackColor = true;
             // 
             // l2dGroupBox
             // 
@@ -831,6 +859,8 @@
         private System.Windows.Forms.Button Cancel;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox converttexture;
+        private System.Windows.Forms.CheckBox convertNormalMapsCheckBox;
+        private System.Windows.Forms.CheckBox normalMapInvertYCheckBox;
         private System.Windows.Forms.RadioButton tojpg;
         private System.Windows.Forms.RadioButton topng;
         private System.Windows.Forms.RadioButton tobmp;

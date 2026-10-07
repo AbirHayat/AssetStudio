@@ -1,4 +1,4 @@
-﻿namespace AssetStudioGUI
+namespace AssetStudioGUI
 {
     partial class AssetStudioGUIForm
     {
@@ -166,6 +166,8 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSelectedNormalMapsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dumpSelectedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAnimatorWithSelectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAsLive2DModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1544,6 +1546,8 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyToolStripMenuItem,
             this.exportSelectedAssetsToolStripMenuItem,
+            this.exportSelectedNormalMapsToolStripMenuItem,
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem,
             this.dumpSelectedAssetsToolStripMenuItem,
             this.exportAnimatorWithSelectedAnimationClipMenuItem,
             this.exportAsLive2DModelToolStripMenuItem,
@@ -1568,6 +1572,22 @@
             this.exportSelectedAssetsToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.exportSelectedAssetsToolStripMenuItem.Text = "Export selected assets";
             this.exportSelectedAssetsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedAssetsToolStripMenuItem_Click);
+            // 
+            // exportSelectedNormalMapsToolStripMenuItem
+            // 
+            this.exportSelectedNormalMapsToolStripMenuItem.Name = "exportSelectedNormalMapsToolStripMenuItem";
+            this.exportSelectedNormalMapsToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportSelectedNormalMapsToolStripMenuItem.Text = "Export as Normal Map (Standard RGB)";
+            this.exportSelectedNormalMapsToolStripMenuItem.Visible = false;
+            this.exportSelectedNormalMapsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedNormalMapsToolStripMenuItem_Click);
+            // 
+            // exportSelectedNormalMapsInvertYToolStripMenuItem
+            // 
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem.Name = "exportSelectedNormalMapsInvertYToolStripMenuItem";
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem.Text = "Export as Normal Map (Invert Y / DirectX)";
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem.Visible = false;
+            this.exportSelectedNormalMapsInvertYToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedNormalMapsInvertYToolStripMenuItem_Click);
             // 
             // dumpSelectedAssetsToolStripMenuItem
             // 
@@ -1781,6 +1801,8 @@
         private System.Windows.Forms.ToolStripMenuItem showOriginalFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAnimatorWithSelectedAnimationClipMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedAssetsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportSelectedNormalMapsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportSelectedNormalMapsInvertYToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem filterTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedObjectsToolStripMenuItem;

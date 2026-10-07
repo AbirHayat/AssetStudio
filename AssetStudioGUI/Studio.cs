@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using CubismLive2DExtractor;
 using System;
 using System.Collections.Concurrent;
@@ -248,6 +248,18 @@ namespace AssetStudioGUI
                             {
                                 l2dModelDict[mocMono] = m_GameObject.CubismModel;
                                 BindAnimationClips(m_GameObject);
+                            }
+                            break;
+                        case Material m_Material:
+                            foreach (var texEnv in m_Material.m_SavedProperties.m_TexEnvs)
+                            {
+                                if (NormalMapConverter.IsNormalMapMaterialProperty(texEnv.Key))
+                                {
+                                    if (texEnv.Value.m_Texture.TryGet(out var tex) && tex is Texture2D tex2D)
+                                    {
+                                        tex2D.IsNormalMap = true;
+                                    }
+                                }
                             }
                             break;
                         case Texture2D m_Texture2D:
@@ -724,6 +736,145 @@ namespace AssetStudioGUI
                 var statusText = exportedCount == 0
                     ? "Nothing exported."
                     : $"Finished {mode.ToLower()}ing [{exportedCount}/{toExportCount}] assets.";
+                if (toExportCount > exportedCount)
+                {
+                    statusText += exceptionMsgs.IsEmpty
+                        ? $" {toExportCount - exportedCount} assets skipped (not extractable or files already exist)."
+                        : " Export process was stopped because one or more exceptions occurred.";
+                    Progress.Report(toExportCount, toExportCount);
+                }
+                Logger.Info(statusText);
+                exceptionMsgs.Clear();
+
+                if (Properties.Settings.Default.openAfterExport && exportedCount > 0)
+                {
+                    OpenFolderInExplorer(savePath);
+                }
+            });
+        }
+
+        public static void ExportTexturesAsNormalMap(string savePath, List<AssetItem> toExportAssets, bool invertY)
+        {
+            ThreadPool.QueueUserWorkItem(state =>
+            {
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+                var groupOption = (AssetGroupOption)Properties.Settings.Default.assetGroupOption;
+                var parallelExportCount = Properties.Settings.Default.parallelExportCount <= 0
+                    ? Environment.ProcessorCount - 1
+                    : Math.Min(Properties.Settings.Default.parallelExportCount, Environment.ProcessorCount - 1);
+                parallelExportCount = Properties.Settings.Default.parallelExport ? parallelExportCount : 1;
+                var toParallelExportAssetDict = new ConcurrentDictionary<AssetItem, string>();
+                var exceptionMsgs = new ConcurrentDictionary<Exception, string>();
+                var toExportCount = toExportAssets.Count;
+                var exportedCount = 0;
+                var i = 0;
+                Progress.Reset();
+
+                Parallel.ForEach(toExportAssets, asset =>
+                {
+                    string exportPath;
+                    switch (groupOption)
+                    {
+                        case AssetGroupOption.TypeName:
+                            exportPath = Path.Combine(savePath, asset.TypeString);
+                            break;
+                        case AssetGroupOption.ContainerPath:
+                        case AssetGroupOption.ContainerPathFull:
+                            if (!string.IsNullOrEmpty(asset.Container))
+                            {
+                                exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                                if (groupOption == AssetGroupOption.ContainerPathFull)
+                                {
+                                    exportPath = Path.Combine(exportPath, Path.GetFileNameWithoutExtension(asset.Container));
+                                }
+                            }
+                            else
+                            {
+                                exportPath = Path.Combine(savePath, Path.GetFileName(asset.SourceFile.originalPath) + "_export", asset.SourceFile.fileName);
+                            }
+                            break;
+                        case AssetGroupOption.SceneHierarchy:
+                            if (asset.TreeNode != null)
+                            {
+                                exportPath = Path.Combine(savePath, asset.TreeNode.FullPath);
+                            }
+                            else
+                            {
+                                exportPath = Path.Combine(savePath, "_sceneRoot", asset.TypeString);
+                            }
+                            break;
+                        default:
+                            exportPath = savePath;
+                            break;
+                    }
+                    exportPath += Path.DirectorySeparatorChar;
+
+                    if (asset.Type == ClassIDType.Texture2DArray)
+                    {
+                        var m_Texture2DArray = (Texture2DArray)asset.Asset;
+                        toExportCount += m_Texture2DArray.TextureList.Count - 1;
+                        foreach (var texture in m_Texture2DArray.TextureList)
+                        {
+                            var fakeItem = new AssetItem(texture)
+                            {
+                                Text = texture.m_Name,
+                                Container = asset.Container,
+                            };
+                            toParallelExportAssetDict.TryAdd(fakeItem, exportPath);
+                        }
+                    }
+                    else
+                    {
+                        toParallelExportAssetDict.TryAdd(asset, exportPath);
+                    }
+                });
+
+                Parallel.ForEach(toParallelExportAssetDict, new ParallelOptions { MaxDegreeOfParallelism = parallelExportCount }, (toExportAsset, loopState) =>
+                {
+                    var asset = toExportAsset.Key;
+                    var exportPath = toExportAsset.Value;
+                    try
+                    {
+                        if (ParallelExporter.ExportTexture2D(asset, exportPath, out var debugLog, forceNormalMap: true, forceInvertY: invertY))
+                        {
+                            Interlocked.Increment(ref exportedCount);
+                            if (GUILogger.ShowDebugMessage)
+                            {
+                                Logger.Debug(debugLog);
+                                StatusStripUpdate($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                            }
+                            else
+                            {
+                                Logger.Info($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                            }
+                        }
+                        Interlocked.Increment(ref i);
+                        Progress.Report(i, toExportCount);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (parallelExportCount == 1)
+                        {
+                            Logger.Error($"Export {asset.TypeString}: {asset.Text} error", ex);
+                        }
+                        else
+                        {
+                            loopState.Break();
+                            exceptionMsgs.TryAdd(ex, $"Exception occurred when exporting {asset.TypeString}: {asset.Text}\n{ex}\n");
+                        }
+                    }
+                });
+                ParallelExporter.ClearHash();
+
+                foreach (var ex in exceptionMsgs)
+                {
+                    Logger.Error(ex.Value);
+                }
+
+                var statusText = exportedCount == 0
+                    ? "Nothing exported."
+                    : $"Finished exporting [{exportedCount}/{toExportCount}] normal maps.";
                 if (toExportCount > exportedCount)
                 {
                     statusText += exceptionMsgs.IsEmpty

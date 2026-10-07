@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -102,6 +102,8 @@ namespace AssetStudioCLI.Options
         public static bool convertTexture;
         public static Option<ImageFormat> o_imageFormat;
         public static Option<AudioFormat> o_audioFormat;
+        public static Option<bool> f_notUnpackNormalMaps;
+        public static Option<bool> f_normalMapInvertY;
         //live2d
         public static Option<CubismLive2DExtractor.Live2DModelGroupOption> o_l2dGroupOption;
         public static Option<bool> f_l2dAssetSearchByFilename;
@@ -318,6 +320,24 @@ namespace AssetStudioCLI.Options
                     "None - Do not convert FMOD audios and export them in their own format\n",
                 optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
+            );
+            f_notUnpackNormalMaps = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--not-unpack-normal-maps",
+                optionDescription: "(Flag) If specified, Studio will not unpack normal maps to standard RGB\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Convert,
+                isFlag: true
+            );
+            f_normalMapInvertY = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--invert-normal-y",
+                optionDescription: "(Flag) If specified, invert the Green channel (Y) of unpacked normal maps (for DirectX / Unreal Engine)\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Convert,
+                isFlag: true
             );
             #endregion
 
@@ -703,6 +723,14 @@ namespace AssetStudioCLI.Options
                     case "-r":
                     case "--overwrite-existing":
                         f_overwriteExisting.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--not-unpack-normal-maps":
+                        f_notUnpackNormalMaps.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--invert-normal-y":
+                        f_normalMapInvertY.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--l2d-search-by-filename":

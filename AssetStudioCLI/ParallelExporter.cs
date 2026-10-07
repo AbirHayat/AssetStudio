@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using AssetStudioCLI.Options;
 using System;
 using System.Collections.Concurrent;
@@ -45,7 +45,9 @@ namespace AssetStudioCLI
                     debugLog += sb.ToString();
                 }
 
-                var image = m_Texture2D.ConvertToImage(flip: true);
+                var isNormal = !CLIOptions.f_notUnpackNormalMaps.Value && 
+                    (m_Texture2D.IsNormalMap || NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat));
+                var image = m_Texture2D.ConvertToImage(flip: true, unpackNormal: isNormal, invertY: CLIOptions.f_normalMapInvertY.Value);
                 if (image == null)
                 {
                     Logger.Error($"{debugLog}Export error. Failed to convert texture \"{m_Texture2D.m_Name}\" into image");

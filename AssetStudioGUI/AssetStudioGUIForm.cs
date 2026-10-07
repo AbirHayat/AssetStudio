@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using Newtonsoft.Json;
 using OpenTK.Graphics.OpenGL;
 using System;
@@ -58,6 +58,7 @@ namespace AssetStudioGUI
         #region TexControl
         private static char[] textureChannelNames = new[] { 'B', 'G', 'R', 'A' };
         private bool[] textureChannels = new[] { true, true, true, true };
+        private bool? normalMapPreviewOverride = null;
         #endregion
 
         #region GLControl
@@ -426,6 +427,17 @@ namespace AssetStudioGUI
                             case Keys.A:
                                 textureChannels[3] = !textureChannels[3];
                                 need = true;
+                                break;
+                            case Keys.N:
+                                if (lastSelectedItem?.Asset is Texture2D tex)
+                                {
+                                    var isNorm = tex.IsNormalMap ||
+                                                 NormalMapConverter.IsNormalMapFormat(tex.m_TextureFormat) ||
+                                                 NormalMapConverter.IsNormalMapName(tex.m_Name);
+                                    var currentUnpack = normalMapPreviewOverride ?? (Properties.Settings.Default.convertNormalMaps && isNorm);
+                                    normalMapPreviewOverride = !currentUnpack;
+                                    need = true;
+                                }
                                 break;
                         }
                     }
@@ -880,6 +892,10 @@ namespace AssetStudioGUI
 
         private void PreviewAsset(AssetItem assetItem)
         {
+            if (assetItem != lastPreviewItem)
+            {
+                normalMapPreviewOverride = null;
+            }
             lastPreviewItem = assetItem;
             if (assetItem == null)
                 return;
@@ -964,7 +980,12 @@ namespace AssetStudioGUI
 
         private void PreviewTexture2D(AssetItem assetItem, Texture2D m_Texture2D)
         {
-            var image = m_Texture2D.ConvertToImage(true);
+            var isDetectedNormal = m_Texture2D.IsNormalMap ||
+                                   NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat) ||
+                                   NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name);
+            var shouldUnpackNormal = normalMapPreviewOverride ?? (Properties.Settings.Default.convertNormalMaps && isDetectedNormal);
+
+            var image = m_Texture2D.ConvertToImage(flip: true, unpackNormal: shouldUnpackNormal, invertY: Properties.Settings.Default.normalMapInvertY);
             if (image != null)
             {
                 var bitmap = new DirectBitmap(image);
@@ -985,6 +1006,10 @@ namespace AssetStudioGUI
                 {
                     case 0: assetItem.InfoText += "\nWrap mode: Repeat"; break;
                     case 1: assetItem.InfoText += "\nWrap mode: Clamp"; break;
+                }
+                if (isDetectedNormal || shouldUnpackNormal)
+                {
+                    assetItem.InfoText += $"\nNormal map: {(shouldUnpackNormal ? "Unpacked (RGB)" : "Raw")} ['Ctrl'+'N' to toggle]";
                 }
                 assetItem.InfoText += "\nChannels: ";
                 var validChannel = 0;
@@ -1020,7 +1045,12 @@ namespace AssetStudioGUI
                     : "";
                 PreviewTexture(bitmap);
 
-                StatusStripUpdate("'Ctrl'+'R'/'G'/'B'/'A' for Channel Toggle");
+                var statusMsg = "'Ctrl'+'R'/'G'/'B'/'A' for Channel Toggle";
+                if (isDetectedNormal || shouldUnpackNormal)
+                {
+                    statusMsg += " | 'Ctrl'+'N' for Normal Map Toggle";
+                }
+                StatusStripUpdate(statusMsg);
             }
             else
             {
@@ -1660,6 +1690,8 @@ namespace AssetStudioGUI
                 exportL2DWithFadeLstToolStripMenuItem.Visible = false;
                 exportL2DWithFadeToolStripMenuItem.Visible = false;
                 exportL2DWithClipsToolStripMenuItem.Visible = false;
+                exportSelectedNormalMapsToolStripMenuItem.Visible = false;
+                exportSelectedNormalMapsInvertYToolStripMenuItem.Visible = false;
 
                 if (assetListView.SelectedIndices.Count == 1)
                 {
@@ -1705,6 +1737,10 @@ namespace AssetStudioGUI
                     exportL2DWithFadeLstToolStripMenuItem.Visible = (selectedTypes & SelectedAssetType.MonoBehaviourMoc) != 0 && (selectedTypes & SelectedAssetType.MonoBehaviourFadeLst) != 0;
                     exportL2DWithFadeToolStripMenuItem.Visible = (selectedTypes & SelectedAssetType.MonoBehaviourMoc) != 0 && (selectedTypes & SelectedAssetType.MonoBehaviourFade) != 0;
                     exportL2DWithClipsToolStripMenuItem.Visible = (selectedTypes & SelectedAssetType.MonoBehaviourMoc) != 0 && (selectedTypes & SelectedAssetType.AnimationClip) != 0;
+
+                    var hasTexture = selectedAssets.Any(x => x.Type == ClassIDType.Texture2D || x.Type == ClassIDType.Texture2DArrayImage || x.Type == ClassIDType.Texture2DArray);
+                    exportSelectedNormalMapsToolStripMenuItem.Visible = hasTexture;
+                    exportSelectedNormalMapsInvertYToolStripMenuItem.Visible = hasTexture;
                 }
 
                 var selectedElement = assetListView.HitTest(new Point(e.X, e.Y));
@@ -1723,6 +1759,33 @@ namespace AssetStudioGUI
         private void exportSelectedAssetsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ExportAssets(ExportFilter.Selected, ExportType.Convert);
+        }
+
+        private void exportSelectedNormalMapsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportSelectedTexturesAsNormalMap(invertY: false);
+        }
+
+        private void exportSelectedNormalMapsInvertYToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportSelectedTexturesAsNormalMap(invertY: true);
+        }
+
+        private void ExportSelectedTexturesAsNormalMap(bool invertY)
+        {
+            var selectedAssets = GetSelectedAssets();
+            var textureItems = selectedAssets.Where(x => x.Type == ClassIDType.Texture2D || x.Type == ClassIDType.Texture2DArrayImage || x.Type == ClassIDType.Texture2DArray).ToList();
+            if (textureItems.Count == 0)
+                return;
+
+            var saveFolderDialog = new OpenFolderDialog();
+            saveFolderDialog.InitialFolder = saveDirectoryBackup;
+            if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                timer.Stop();
+                saveDirectoryBackup = saveFolderDialog.Folder;
+                Studio.ExportTexturesAsNormalMap(saveFolderDialog.Folder, textureItems, invertY);
+            }
         }
 
         private void dumpSelectedAssetsToolStripMenuItem_Click(object sender, EventArgs e)
