@@ -109,6 +109,7 @@ namespace AssetStudioGUI
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.sceneExactSearchCheckBox = new System.Windows.Forms.CheckBox();
+            this.sceneAutoSelectCheckBox = new System.Windows.Forms.CheckBox();
             this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -157,6 +158,7 @@ namespace AssetStudioGUI
             this.shShowRelatedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shToolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.shSelectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.shSelectSearchResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shSlearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.shExpandAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -899,6 +901,7 @@ namespace AssetStudioGUI
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.sceneAutoSelectCheckBox);
             this.tabPage1.Controls.Add(this.sceneExactSearchCheckBox);
             this.tabPage1.Controls.Add(this.sceneTreeView);
             this.tabPage1.Controls.Add(this.treeSearch);
@@ -908,6 +911,21 @@ namespace AssetStudioGUI
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Scene Hierarchy";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // sceneAutoSelectCheckBox
+            // 
+            this.sceneAutoSelectCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.sceneAutoSelectCheckBox.AutoSize = true;
+            this.sceneAutoSelectCheckBox.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.sceneAutoSelectCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.sceneAutoSelectCheckBox.Location = new System.Drawing.Point(300, 2);
+            this.sceneAutoSelectCheckBox.Name = "sceneAutoSelectCheckBox";
+            this.sceneAutoSelectCheckBox.Size = new System.Drawing.Size(80, 17);
+            this.sceneAutoSelectCheckBox.TabIndex = 3;
+            this.sceneAutoSelectCheckBox.Text = "Auto select";
+            this.sceneAutoSelectCheckBox.UseVisualStyleBackColor = true;
+            this.sceneAutoSelectCheckBox.CheckedChanged += new System.EventHandler(this.sceneAutoSelectCheckBox_CheckedChanged);
             // 
             // sceneExactSearchCheckBox
             // 
@@ -1475,32 +1493,40 @@ namespace AssetStudioGUI
             this.shShowRelatedAssetsToolStripMenuItem,
             this.shToolStripSeparator1,
             this.shSelectAllToolStripMenuItem,
+            this.shSelectSearchResultsToolStripMenuItem,
             this.shSlearSelectionToolStripMenuItem,
             this.shToolStripSeparator2,
             this.shExpandAllToolStripMenuItem,
             this.shCollapseAllToolStripMenuItem});
             this.sceneContextMenuStrip.Name = "contextMenuStrip2";
-            this.sceneContextMenuStrip.Size = new System.Drawing.Size(152, 126);
+            this.sceneContextMenuStrip.Size = new System.Drawing.Size(186, 148);
             this.sceneContextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip2_Opening);
             // 
             // shShowRelatedAssetsToolStripMenuItem
             // 
             this.shShowRelatedAssetsToolStripMenuItem.Name = "shShowRelatedAssetsToolStripMenuItem";
-            this.shShowRelatedAssetsToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.shShowRelatedAssetsToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.shShowRelatedAssetsToolStripMenuItem.Text = "Related assets";
             this.shShowRelatedAssetsToolStripMenuItem.Click += new System.EventHandler(this.showRelatedAssetsToolStripMenuItem_Click);
             // 
             // shToolStripSeparator1
             // 
             this.shToolStripSeparator1.Name = "shToolStripSeparator1";
-            this.shToolStripSeparator1.Size = new System.Drawing.Size(148, 6);
+            this.shToolStripSeparator1.Size = new System.Drawing.Size(182, 6);
             // 
             // shSelectAllToolStripMenuItem
             // 
             this.shSelectAllToolStripMenuItem.Name = "shSelectAllToolStripMenuItem";
-            this.shSelectAllToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.shSelectAllToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.shSelectAllToolStripMenuItem.Text = "Select all";
             this.shSelectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
+            // 
+            // shSelectSearchResultsToolStripMenuItem
+            // 
+            this.shSelectSearchResultsToolStripMenuItem.Name = "shSelectSearchResultsToolStripMenuItem";
+            this.shSelectSearchResultsToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.shSelectSearchResultsToolStripMenuItem.Text = "Select search results";
+            this.shSelectSearchResultsToolStripMenuItem.Click += new System.EventHandler(this.shSelectSearchResultsToolStripMenuItem_Click);
             // 
             // shSlearSelectionToolStripMenuItem
             // 
@@ -1881,6 +1907,8 @@ namespace AssetStudioGUI
         private System.Windows.Forms.Label FMODaudioChannelsLabel;
         private System.Windows.Forms.ToolStripMenuItem autoPlayAudioAssetsToolStripMenuItem;
         private System.Windows.Forms.CheckBox sceneExactSearchCheckBox;
+        private System.Windows.Forms.CheckBox sceneAutoSelectCheckBox;
+        private System.Windows.Forms.ToolStripMenuItem shSelectSearchResultsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importOptionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem customUnityVersionToolStripMenuItem;
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersionTextBox;

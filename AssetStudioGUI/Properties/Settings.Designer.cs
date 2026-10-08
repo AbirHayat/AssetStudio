@@ -394,5 +394,17 @@ namespace AssetStudioGUI.Properties {
                 this["normalMapInvertY"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool sceneTreeAutoSelect {
+            get {
+                return ((bool)(this["sceneTreeAutoSelect"]));
+            }
+            set {
+                this["sceneTreeAutoSelect"] = value;
+            }
+        }
     }
 }

@@ -150,6 +150,7 @@ namespace AssetStudioGUI
             useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
             autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
             meshLazyLoadToolStripMenuItem.Checked = Properties.Settings.Default.meshLazyLoad;
+            sceneAutoSelectCheckBox.Checked = Properties.Settings.Default.sceneTreeAutoSelect;
             customBlockCompressionComboBox.SelectedIndex = 0;
             customBlockInfoCompressionComboBox.SelectedIndex = 0;
             assetsManager.Options.BundleOptions.DecompressToDisk = Properties.Settings.Default.decompressToDisk;
@@ -619,12 +620,22 @@ namespace AssetStudioGUI
         {
             if (e.KeyCode == Keys.Enter)
             {
+                if (treeSearch.Text == " Search " || string.IsNullOrWhiteSpace(treeSearch.Text))
+                {
+                    return;
+                }
+
                 if (treeSrcResults.Count == 0)
                 {
                     var isExactSearch = sceneExactSearchCheckBox.Checked;
                     foreach (TreeNode node in sceneTreeView.Nodes)
                     {
                         TreeNodeSearch(node, isExactSearch);
+                    }
+
+                    if (treeSrcResults.Count > 0 && sceneAutoSelectCheckBox.Checked)
+                    {
+                        AutoSelectTreeSearchResults();
                     }
                 }
                 if (treeSrcResults.Count > 0)
@@ -636,8 +647,47 @@ namespace AssetStudioGUI
                     treeSrcResults[nextGObject].EnsureVisible();
                     sceneTreeView.SelectedNode = treeSrcResults[nextGObject];
                     nextGObject++;
+                    if (!sceneAutoSelectCheckBox.Checked)
+                    {
+                        StatusStripUpdate($"Found {treeSrcResults.Count} matching object(s) [{nextGObject}/{treeSrcResults.Count}].");
+                    }
+                }
+                else
+                {
+                    StatusStripUpdate("Matching object not found.");
                 }
             }
+        }
+
+        private void AutoSelectTreeSearchResults()
+        {
+            treeRecursionEnabled = false;
+            sceneTreeView.BeginUpdate();
+            try
+            {
+                for (var i = 0; i < treeNodeSelectedList.Count; i++)
+                {
+                    treeNodeSelectedList[i].Checked = false;
+                }
+                treeNodeSelectedList.Clear();
+
+                foreach (var node in treeSrcResults)
+                {
+                    node.Checked = true;
+                    if (!treeNodeSelectedList.Contains(node))
+                    {
+                        treeNodeSelectedList.Add(node);
+                    }
+                    node.EnsureVisible();
+                }
+            }
+            finally
+            {
+                treeRecursionEnabled = true;
+                sceneTreeView.EndUpdate();
+            }
+
+            StatusStripUpdate($"Selected {treeNodeSelectedList.Count} object(s).");
         }
 
         private void TreeNodeSearch(TreeNode treeNode, bool isExactSearch)
@@ -654,6 +704,17 @@ namespace AssetStudioGUI
             foreach (TreeNode node in treeNode.Nodes)
             {
                 TreeNodeSearch(node, isExactSearch);
+            }
+        }
+
+        private void sceneAutoSelectCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.sceneTreeAutoSelect = sceneAutoSelectCheckBox.Checked;
+            Properties.Settings.Default.Save();
+
+            if (sceneAutoSelectCheckBox.Checked && treeSrcResults.Count > 0)
+            {
+                AutoSelectTreeSearchResults();
             }
         }
 
@@ -2364,6 +2425,19 @@ namespace AssetStudioGUI
                 };
                 assetItem.Click += selectRelatedAsset;
                 shShowRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
+            }
+            shSelectSearchResultsToolStripMenuItem.Visible = treeSrcResults.Count > 0;
+            if (treeSrcResults.Count > 0)
+            {
+                shSelectSearchResultsToolStripMenuItem.Text = $"Select search results ({treeSrcResults.Count})";
+            }
+        }
+
+        private void shSelectSearchResultsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeSrcResults.Count > 0)
+            {
+                AutoSelectTreeSearchResults();
             }
         }
 
