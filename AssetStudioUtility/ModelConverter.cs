@@ -13,6 +13,8 @@ namespace AssetStudio
         public List<ImportedTexture> TextureList { get; protected set; } = new List<ImportedTexture>();
         public List<ImportedKeyframedAnimation> AnimationList { get; protected set; } = new List<ImportedKeyframedAnimation>();
         public List<ImportedMorph> MorphList { get; protected set; } = new List<ImportedMorph>();
+        public bool UnpackNormalMaps { get; set; } = true;
+        public bool InvertNormalY { get; set; } = false;
 
         private ImageFormat imageFormat;
         private Avatar avatar;
@@ -713,14 +715,32 @@ namespace AssetStudio
                     iMat.Textures.Add(texture);
 
                     int dest = -1;
-                    if (texEnv.Key == "_MainTex")
+                    if (texEnv.Key.Equals("_MainTex", StringComparison.OrdinalIgnoreCase)
+                        || texEnv.Key.IndexOf("basecolor", StringComparison.OrdinalIgnoreCase) >= 0
+                        || texEnv.Key.IndexOf("diffuse", StringComparison.OrdinalIgnoreCase) >= 0
+                        || texEnv.Key.IndexOf("albedo", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
                         dest = 0;
-                    else if (texEnv.Key == "_BumpMap")
-                        dest = 3;
-                    else if (texEnv.Key.Contains("Specular"))
-                        dest = 2;
-                    else if (texEnv.Key.Contains("Normal"))
+                    }
+                    else if (NormalMapConverter.IsNormalMapMaterialProperty(texEnv.Key))
+                    {
                         dest = 1;
+                        m_Texture2D.IsNormalMap = true;
+                    }
+                    else if (texEnv.Key.IndexOf("specular", StringComparison.OrdinalIgnoreCase) >= 0
+                        || texEnv.Key.IndexOf("metallic", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        dest = 2;
+                    }
+
+                    if (NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat))
+                    {
+                        m_Texture2D.IsNormalMap = true;
+                        if (dest == -1)
+                        {
+                            dest = 1;
+                        }
+                    }
 
                     texture.Dest = dest;
 
@@ -750,7 +770,16 @@ namespace AssetStudio
 
                     texture.Offset = texEnv.Value.m_Offset;
                     texture.Scale = texEnv.Value.m_Scale;
-                    var isNormal = dest == 3 || dest == 1 || m_Texture2D.IsNormalMap || NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat);
+
+                    var isNormal = false;
+                    if (dest != 0 && dest != 2)
+                    {
+                        isNormal = dest == 3 || dest == 1
+                            || NormalMapConverter.IsNormalMapMaterialProperty(texEnv.Key)
+                            || m_Texture2D.IsNormalMap
+                            || NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name)
+                            || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat);
+                    }
                     ConvertTexture2D(m_Texture2D, texture.Name, isNormal);
                 }
 
@@ -771,7 +800,8 @@ namespace AssetStudio
                 return;
             }
 
-            var stream = m_Texture2D.ConvertToStream(imageFormat, true, unpackNormal: isNormalMap);
+            var shouldUnpack = isNormalMap ? UnpackNormalMaps : (UnpackNormalMaps ? (bool?)null : false);
+            var stream = m_Texture2D.ConvertToStream(imageFormat, true, unpackNormal: shouldUnpack, invertY: InvertNormalY);
             if (stream != null)
             {
                 using (stream)

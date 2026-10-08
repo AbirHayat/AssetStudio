@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+using AssetStudio;
 using AssetStudioCLI.Options;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -275,6 +275,8 @@ namespace AssetStudioCLI
             var convert = animationList != null
                 ? new ModelConverter(m_Animator, CLIOptions.o_imageFormat.Value, animationList.Select(x => (AnimationClip)x.Asset).ToList())
                 : new ModelConverter(m_Animator, CLIOptions.o_imageFormat.Value);
+            convert.UnpackNormalMaps = !CLIOptions.f_notUnpackNormalMaps.Value;
+            convert.InvertNormalY = CLIOptions.f_normalMapInvertY.Value;
             ExportFbx(convert, exportFullPath);
             return true;
         }
@@ -403,6 +405,8 @@ namespace AssetStudioCLI
             var convert = animationList != null
                 ? new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value, animationList.Select(x => (AnimationClip)x.Asset).ToList())
                 : new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value);
+            convert.UnpackNormalMaps = !CLIOptions.f_notUnpackNormalMaps.Value;
+            convert.InvertNormalY = CLIOptions.f_normalMapInvertY.Value;
             var modelName = FixFileName(gameObject.m_Name);
             var exportFullPath = Path.Combine(exportPath, "FBX_GameObjects", modelName, modelName + ".fbx");
             if (File.Exists(exportFullPath))

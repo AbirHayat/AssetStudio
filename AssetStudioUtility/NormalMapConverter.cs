@@ -21,7 +21,7 @@ namespace AssetStudio
         private static readonly byte[] ZTable = new byte[256 * 256];
 
         private static readonly Regex NormalNameRegex = new Regex(
-            @"(?:^|[_\-\s])(n|norm|normal|bump|nrm|nm|normalmap|bumpmap)(?:[_\-\s\d]|\.[^.]+$|$)",
+            @"(?:^|[_\-\s])(normal|bump|norm|nrm|nm|n)(?:[_\-\s\d]|\.[^.]+$|$)|(?:normal|bump|nrm)(?:map)?(?:s)?(?:[_\-\s\d]|\.[^.]+$|$)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static byte ClampByte(float val)
@@ -56,6 +56,14 @@ namespace AssetStudio
         {
             if (string.IsNullOrEmpty(name))
                 return false;
+
+            if (name.IndexOf("normal", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+            if (name.IndexOf("bump", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+            if (name.IndexOf("nrm", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
             return NormalNameRegex.IsMatch(name);
         }
 
@@ -63,7 +71,11 @@ namespace AssetStudio
         {
             return format == TextureFormat.BC5
                 || format == TextureFormat.EAC_RG
-                || format == TextureFormat.EAC_RG_SIGNED;
+                || format == TextureFormat.EAC_RG_SIGNED
+                || format == TextureFormat.RG16
+                || format == TextureFormat.RG32
+                || format == TextureFormat.RGHalf
+                || format == TextureFormat.RGFloat;
         }
 
         public static bool IsNormalMapMaterialProperty(string propName)
@@ -75,7 +87,75 @@ namespace AssetStudio
                 || propName.Equals("_NormalMap", StringComparison.OrdinalIgnoreCase)
                 || propName.Equals("_DetailNormalMap", StringComparison.OrdinalIgnoreCase)
                 || propName.IndexOf("normal", StringComparison.OrdinalIgnoreCase) >= 0
-                || propName.IndexOf("bump", StringComparison.OrdinalIgnoreCase) >= 0;
+                || propName.IndexOf("bump", StringComparison.OrdinalIgnoreCase) >= 0
+                || propName.IndexOf("norm", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public static bool IsLikelyDxt5nm(ReadOnlySpan<byte> bgraBytes)
+        {
+            if (bgraBytes.IsEmpty || bgraBytes.Length < 64)
+                return false;
+
+            var totalPixels = bgraBytes.Length / 4;
+            var sampleCount = Math.Min(totalPixels, 64);
+            var step = Math.Max(1, totalPixels / sampleCount);
+
+            var highRCount = 0;
+            var validNormCount = 0;
+            long greenSum = 0;
+            long alphaSum = 0;
+
+            for (var s = 0; s < sampleCount; s++)
+            {
+                var offset = (s * step) * 4;
+                if (offset + 3 >= bgraBytes.Length)
+                    break;
+
+                var g = bgraBytes[offset + 1];
+                var r = bgraBytes[offset + 2];
+                var a = bgraBytes[offset + 3];
+
+                if (r >= 230)
+                {
+                    highRCount++;
+                }
+
+                greenSum += g;
+                alphaSum += a;
+
+                var nx = (a / 127.5f) - 1.0f;
+                var ny = (g / 127.5f) - 1.0f;
+                if ((nx * nx + ny * ny) <= 1.12f)
+                {
+                    validNormCount++;
+                }
+            }
+
+            if (highRCount < sampleCount * 0.80f)
+                return false;
+
+            if (validNormCount < sampleCount * 0.80f)
+                return false;
+
+            var avgG = greenSum / (float)sampleCount;
+            var avgA = alphaSum / (float)sampleCount;
+
+            if (avgG < 50f || avgG > 205f || avgA < 50f || avgA > 205f)
+                return false;
+
+            var alphaVarianceSum = 0f;
+            for (var s = 0; s < sampleCount; s++)
+            {
+                var offset = (s * step) * 4;
+                if (offset + 3 >= bgraBytes.Length)
+                    break;
+                var a = bgraBytes[offset + 3];
+                var diff = a - avgA;
+                alphaVarianceSum += diff * diff;
+            }
+            var alphaStdDev = (float)Math.Sqrt(alphaVarianceSum / sampleCount);
+
+            return alphaStdDev >= 2.0f;
         }
 
         public static NormalMapPacking DetectPacking(TextureFormat format, ReadOnlySpan<byte> bgraBytes = default)

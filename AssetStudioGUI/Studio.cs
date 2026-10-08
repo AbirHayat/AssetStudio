@@ -255,7 +255,7 @@ namespace AssetStudioGUI
                             {
                                 if (NormalMapConverter.IsNormalMapMaterialProperty(texEnv.Key))
                                 {
-                                    if (texEnv.Value.m_Texture.TryGet(out var tex) && tex is Texture2D tex2D)
+                                    if (texEnv.Value.m_Texture.TryGet<Texture2D>(out var tex2D))
                                     {
                                         tex2D.IsNormalMap = true;
                                     }
@@ -263,6 +263,10 @@ namespace AssetStudioGUI
                             }
                             break;
                         case Texture2D m_Texture2D:
+                            if (!m_Texture2D.IsNormalMap)
+                            {
+                                m_Texture2D.IsNormalMap = NormalMapConverter.IsNormalMapName(m_Texture2D.m_Name) || NormalMapConverter.IsNormalMapFormat(m_Texture2D.m_TextureFormat);
+                            }
                             if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
                                 assetItem.FullSize = asset.byteSize + m_Texture2D.m_StreamData.size;
                             assetItem.Text = m_Texture2D.m_Name;

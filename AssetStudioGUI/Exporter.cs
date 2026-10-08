@@ -253,7 +253,11 @@ namespace AssetStudioGUI
                         exportFullPath = Path.Combine(exportPath, item.Text + item.UniqueID, $"{item.Text}_{clipName}.fbx");
                     }
                     var singleClipList = new List<AnimationClip> { (AnimationClip)clip.Asset };
-                    var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType, singleClipList);
+                    var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType, singleClipList)
+                    {
+                        UnpackNormalMaps = Properties.Settings.Default.convertNormalMaps,
+                        InvertNormalY = Properties.Settings.Default.normalMapInvertY
+                    };
                     ExportFbx(convert, exportFullPath);
                 }
             }
@@ -264,7 +268,11 @@ namespace AssetStudioGUI
                 {
                     exportFullPath = Path.Combine(exportPath, item.Text + item.UniqueID, item.Text + ".fbx");
                 }
-                var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType);
+                var convert = new ModelConverter(m_Animator, Properties.Settings.Default.convertType)
+                {
+                    UnpackNormalMaps = Properties.Settings.Default.convertNormalMaps,
+                    InvertNormalY = Properties.Settings.Default.normalMapInvertY
+                };
                 ExportFbx(convert, exportFullPath);
             }
             return true;
@@ -390,6 +398,8 @@ namespace AssetStudioGUI
             var convert = animationList != null
                 ? new ModelConverter(gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToList())
                 : new ModelConverter(gameObject, Properties.Settings.Default.convertType);
+            convert.UnpackNormalMaps = Properties.Settings.Default.convertNormalMaps;
+            convert.InvertNormalY = Properties.Settings.Default.normalMapInvertY;
             exportPath = exportPath + FixFileName(gameObject.m_Name) + ".fbx";
             ExportFbx(convert, exportPath);
         }
@@ -402,6 +412,8 @@ namespace AssetStudioGUI
             var convert = animationList != null
                 ? new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToList())
                 : new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType);
+            convert.UnpackNormalMaps = Properties.Settings.Default.convertNormalMaps;
+            convert.InvertNormalY = Properties.Settings.Default.normalMapInvertY;
             ExportFbx(convert, exportPath);
         }
 
